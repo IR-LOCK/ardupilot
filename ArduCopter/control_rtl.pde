@@ -288,8 +288,21 @@ static void rtl_descent_run()
     // process roll, pitch inputs
     wp_nav.set_pilot_desired_acceleration(roll_control, pitch_control);
 
+
+    if (irlock_blob_detected == true)
+    {
+    float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
+    float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
+    float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+    float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+    // set target to current position
+    wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    }
+    else
+    {
     // run loiter controller
     wp_nav.update_loiter();
+    }
 
     // call z-axis position controller
     pos_control.set_alt_target_with_slew(g.rtl_alt_final, G_Dt);
@@ -372,8 +385,20 @@ static void rtl_land_run()
      // process pilot's roll and pitch input
     wp_nav.set_pilot_desired_acceleration(roll_control, pitch_control);
 
+    if (irlock_blob_detected == true)
+    {
+    float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
+    float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
+    float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+    float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+    // set target to current position
+    wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    }
+    else
+    {
     // run loiter controller
     wp_nav.update_loiter();
+    }
 
     // call z-axis position controller
     float cmb_rate = get_throttle_land();

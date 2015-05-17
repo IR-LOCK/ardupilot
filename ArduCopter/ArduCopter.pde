@@ -126,6 +126,7 @@
 #include <AP_Motors.h>          // AP Motors library
 #include <AP_RangeFinder.h>     // Range finder library
 #include <AP_OpticalFlow.h>     // Optical Flow library
+#include <AP_IRLock.h>	        // IR-Lock Sensor library
 #include <Filter.h>             // Filter library
 #include <AP_Buffer.h>          // APM FIFO Buffer
 #include <AP_Relay.h>           // APM relay
@@ -317,6 +318,17 @@ AP_Mission mission(ahrs, &start_command, &verify_command, &exit_mission);
  #if OPTFLOW == ENABLED
 static AP_OpticalFlow_ADNS3080 optflow;
  #endif
+
+////////////////////////////////////////////////////////////////////////////////
+// IRLOCK SENSOR
+////////////////////////////////////////////////////////////////////////////////
+#if IRLOCK == ENABLED
+#if CONFIG_HAL_BOARD == HAL_BOARD_PX4
+static AP_IRLock_PX4 irlock(ahrs);
+#else
+#error Unrecognized IRLOCK setting
+#endif
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 // GCS selection
@@ -564,6 +576,14 @@ static float baro_climbrate;        // barometer climbrate in cm/s
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// Irlock
+////////////////////////////////////////////////////////////////////////////////
+// holds irlock pixy data: signature, center_x, center_y, width, height
+static irlock_block IRLOCK_FRAME[IRLOCK_MAX_BLOCKS_PER_FRAME];
+unsigned int irlock_i = 0; // the new blob iterater
+bool irlock_blob_detected; // true if new blob detected
+
+////////////////////////////////////////////////////////////////////////////////
 // 3D Location vectors
 ////////////////////////////////////////////////////////////////////////////////
 // Current location of the copter
@@ -778,6 +798,9 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
     { rc_loop,               4,     10 },
     { throttle_loop,         8,     45 },
     { update_GPS,            8,     90 },
+#if IRLOCK == ENABLED
+    { update_irlock, 8, 20 },
+#endif
     { update_batt_compass,  40,     72 },
     { read_aux_switches,    40,      5 },
     { arm_motors_check,     40,      1 },
@@ -846,6 +869,9 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
     { rc_loop,               1,     100 },
     { throttle_loop,         2,     450 },
     { update_GPS,            2,     900 },
+#if IRLOCK == ENABLED
+    { update_irlock, 8, 20 },
+#endif
     { update_batt_compass,  10,     720 },
     { read_aux_switches,    10,      50 },
     { arm_motors_check,     10,      10 },

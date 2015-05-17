@@ -75,15 +75,27 @@ static void loiter_run()
 
     // when landed reset targets and output zero throttle
     if (ap.land_complete) {
-        wp_nav.init_loiter_target();
+    	wp_nav.init_loiter_target();
         attitude_control.relax_bf_rate_controller();
         attitude_control.set_yaw_target_to_current_heading();
         // move throttle to between minimum and non-takeoff-throttle to keep us on the ground
         attitude_control.set_throttle_out(get_throttle_pre_takeoff(g.rc_3.control_in), false);
         pos_control.set_alt_target_to_current_alt();
     }else{
-        // run loiter controller
-        wp_nav.update_loiter();
+    	if (irlock_blob_detected == true)
+    	{
+    	float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
+    	float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
+    	float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+    	float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+    	// set target to current position
+    	wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    	}
+    	else
+    	{
+    	// run loiter controller
+    	wp_nav.update_loiter();
+    	}
 
         // call attitude controller
         attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
@@ -99,5 +111,5 @@ static void loiter_run()
         // update altitude target and call position controller
         pos_control.set_alt_target_from_climb_rate(target_climb_rate, G_Dt);
         pos_control.update_z_controller();
-    }
+        }
 }

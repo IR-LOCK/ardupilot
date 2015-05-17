@@ -108,6 +108,7 @@ then
     mkblctrl -mkmode x -d /dev/pwm_output
 fi
 
+echo "Trying PX4IO board"
 
 # try the px4io start twice. Some FMUv2 board don't
 # come up the first time
@@ -329,7 +330,10 @@ then
     echo "Found mb12xx sensor"
 fi
 
-echo "Trying PX4IO board"
+if irlock start
+then
+	echo "Found irlock sensor"
+fi
 
 if mtd start /fs/mtd
 then

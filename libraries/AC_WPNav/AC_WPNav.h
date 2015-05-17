@@ -44,6 +44,8 @@
 
 #define WPNAV_YAW_DIST_MIN                 200      // minimum track length which will lead to target yaw being updated to point at next waypoint.  Under this distance the yaw target will be frozen at the current heading
 
+#define IRLOCK_LOITER_UPDATE_TIME 		0.0f 		// the wait time for irlock_loiter to update a new marker position
+
 class AC_WPNav
 {
 public:
@@ -95,6 +97,9 @@ public:
 
     /// update_loiter - run the loiter controller - should be called at 10hz
     void update_loiter();
+
+    /// update_irlock_loiter - run the irlock loiter controller - should be called at 10 hz
+    void update_irlock_loiter(float irlock_error_lat, float irlock_error_lon);
 
     ///
     /// waypoint controller
@@ -281,6 +286,10 @@ protected:
 
     // loiter controller internal variables
     uint32_t    _loiter_last_update;    // time of last update_loiter call
+    float	_irlock_last_update; 		// time of last position update for irlock_xy_controller
+    float _irlock_pos_sum_x; 			// sum of the irlock marker y positions
+    float	_irlock_pos_sum_y; 			// sum of the irlock marker x positions
+    uint16_t	_irlock_iter; 			// iterater for irlock position sum
     uint8_t     _loiter_step;           // used to decide which portion of loiter controller to run during this iteration
     int16_t     _pilot_accel_fwd_cms; 	// pilot's desired acceleration forward (body-frame)
     int16_t     _pilot_accel_rgt_cms;   // pilot's desired acceleration right (body-frame)

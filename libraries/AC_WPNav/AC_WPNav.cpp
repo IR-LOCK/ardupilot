@@ -91,6 +91,10 @@ AC_WPNav::AC_WPNav(const AP_InertialNav& inav, const AP_AHRS& ahrs, AC_PosContro
     _ahrs(ahrs),
     _pos_control(pos_control),
     _loiter_last_update(0),
+	_irlock_last_update(0),
+	_irlock_pos_sum_x(0),
+	_irlock_pos_sum_y(0),
+	_irlock_iter(0),
     _loiter_step(0),
     _pilot_accel_fwd_cms(0),
     _pilot_accel_rgt_cms(0),
@@ -310,6 +314,53 @@ void AC_WPNav::update_loiter()
     }
 }
 
+/// update_loiter - run the loiter controller - should be called at 100hz
+void AC_WPNav::update_irlock_loiter(float irlock_error_lat, float irlock_error_lon)
+{
+const Vector3f& curr_pos = _inav.get_position();
+// calculate dt
+uint32_t now = hal.scheduler->millis();
+float dt = (now - _loiter_last_update) / 1000.0f;
+// sum the x and y irlock marker positions
+_irlock_pos_sum_x = _irlock_pos_sum_x + curr_pos.x + irlock_error_lat;
+_irlock_pos_sum_y = _irlock_pos_sum_y + curr_pos.y + irlock_error_lon;
+// keep count of how many irlock marker positions have been summed
+_irlock_iter = _irlock_iter + 1;
+// reset step back to 0 if 0.1 seconds has passed and we completed the last full cycle
+if (dt >= WPNAV_LOITER_UPDATE_TIME) {
+// double check dt is reasonable
+if (dt >= 1.0f) {
+dt = 0.0;
+}
+// update the irlock_loiter target position after IRLOCK_LOITER_UPDATE_TIME has passed
+float irlock_dt = (now - _irlock_last_update) / 1000.0f;
+if (irlock_dt >= IRLOCK_LOITER_UPDATE_TIME)
+{
+// take average of the irlock marker positions
+float irlock_pos_avg_x = _irlock_pos_sum_x/_irlock_iter;
+float irlock_pos_avg_y = _irlock_pos_sum_y/_irlock_iter;
+// reset irlock marker position sum variables and iteration variables back to zero
+_irlock_pos_sum_x = 0;
+_irlock_pos_sum_y = 0;
+_irlock_iter = 0;
+// set target position
+_pos_control.set_xy_target(irlock_pos_avg_x, irlock_pos_avg_y);
+// disable feed forward variables for irlock_loiter position update
+_pos_control.freeze_ff_xy();
+//capture time since last iteration
+_irlock_last_update = now;
+}
+// capture time since last iteration
+_loiter_last_update = now;
+// translate any adjustments from pilot to loiter target
+calc_loiter_desired_velocity(dt);
+// trigger position controller on next update
+_pos_control.trigger_xy();
+}else{
+// run horizontal position controller
+_pos_control.update_xy_controller(true);
+}
+}
 
 ///
 /// waypoint navigation

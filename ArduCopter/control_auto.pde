@@ -171,8 +171,20 @@ static void auto_wp_run()
         }
     }
 
-    // run waypoint controller
-    wp_nav.update_wpnav();
+    if (irlock_blob_detected == true)
+    {
+    float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
+    float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
+    float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+    float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+    // set target to current position
+    wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    }
+    else
+    {
+        // run waypoint controller
+        wp_nav.update_wpnav();
+    }
 
     // call z-axis position controller (wpnav should have already updated it's alt target)
     pos_control.update_z_controller();
@@ -311,8 +323,21 @@ static void auto_land_run()
     // process roll, pitch inputs
     wp_nav.set_pilot_desired_acceleration(roll_control, pitch_control);
 
-    // run loiter controller
-    wp_nav.update_loiter();
+
+if (irlock_blob_detected == true)
+{
+float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
+float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
+float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+// set target to current position
+wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+}
+else
+{
+// run loiter controller
+wp_nav.update_loiter();
+}
 
     // call z-axis position controller
     pos_control.set_alt_target_from_climb_rate(get_throttle_land(), G_Dt, true);

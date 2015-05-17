@@ -100,6 +100,64 @@ static void init_optflow()
 #endif      // OPTFLOW == ENABLED
 }
 
+// initialize the irlock sensor
+static void init_irlock()
+{
+#if IRLOCK == ENABLED
+if (!irlock.enabled())
+return;
+irlock.init();
+if (!irlock.healthy()) {
+cliSerial->print_P(PSTR("Failed to initialize IRLock\n"));
+Log_Write_Error(ERROR_SUBSYSTEM_IRLOCK, ERROR_CODE_FAILED_TO_INITIALISE);
+}
+#endif
+}
+// update the irlock sensor
+#if IRLOCK == ENABLED
+static void update_irlock(void)
+{
+static uint32_t last_of_update = 0;
+if (!irlock.enabled()){
+return;}
+irlock.update();
+if (irlock.last_update() != last_of_update) {
+	last_of_update = irlock.last_update();
+// This was commented out and added to the main loop ArduCopter.pde
+//irlock_block IRLOCK_FRAME[IRLOCK_MAX_BLOCKS_PER_FRAME];
+irlock.get_current_frame(IRLOCK_FRAME);
+
+// if last update is different then current update, new blob is detected
+// reset iteration of irlock_i
+irlock_blob_detected = true;
+irlock_i = 0;
+//---------------------------------------------------------------------------------------------
+// This code was orignally placed here as an example of how to access irlock pixy parameter
+//cliSerial->print_P(PSTR("IRLOCK FRAME >>>>>>>>>>>>>>>>>>>>>\n"));
+//for (int i = 0; i < irlock.num_blocks(); ++i) {
+//cliSerial->printf_P(PSTR("sig# %u at position (x=%u, y=%u) with (w=%u, h=%u)\n"),
+//IRLOCK_FRAME[i].signature, IRLOCK_FRAME[i].center_x, IRLOCK_FRAME[i].center_y, IRLOCK_FRAME[i].width, IRLOCK_FRAME[i].height);
+//}
+//---------------------------------------------------------------------------------------------
+}
+else
+{
+// If new blob is not detected, iterate irlock_i
+irlock_i = irlock_i + 1;
+// If a new blob has not been seen for more than IRLOCK_NOBLOB_FRAME
+// assume that there are not blobs being detected
+if (irlock_i < IRLOCK_NOBLOB_FRAME)
+{
+irlock_blob_detected = true;
+}
+else
+{
+irlock_blob_detected = false;
+}
+}
+}
+#endif
+
 // read_battery - check battery voltage and current and invoke failsafe if necessary
 // called at 10hz
 static void read_battery(void)
