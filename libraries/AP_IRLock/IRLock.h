@@ -25,6 +25,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define IRLOCK_NOBLOB_FRAME 10 // the number of consecutive similar frames that will cause the sensor validity variable to turn false
 #define IRLOCK_X_PIXEL_PER_DEGREE 5.374f // the x pixel to angle calibration variable
 #define IRLOCK_Y_PIXEL_PER_DEGREE 5.698f // the y pixel to angle calibration variable
+#define IRLOCK_MAX_YAW_RATE 999999999.0f  // the maximum allowable change in the detected target angle over time in deg/s
 struct _irlock_block {
 uint16_t signature;
 uint16_t center_x;
@@ -61,6 +62,9 @@ int16_t irlock_center_y_to_pos(int16_t irlock_current_y, int32_t ir_alt);
 float irlock_xy_pos_to_lat(int16_t irlock_x_pos, int16_t irlock_y_pos);
 // converts the markers relative y position into lat/lon coordinates
 float irlock_xy_pos_to_lon(int16_t irlock_x_pos, int16_t irlock_y_pos);
+// outputs desired target position and desired yaw angle
+Vector3f irlock_two_target_control(int16_t x_center1, int16_t y_center1, int16_t height1, int16_t width1, int16_t x_center2, int16_t y_center2, int16_t height2, int16_t width2, int32_t ir_alt);
+
 // parameter var info table
 static const struct AP_Param::GroupInfo var_info[];
 protected:
@@ -75,5 +79,8 @@ AP_Int8 _enabled;
 uint32_t _last_update;
 size_t _num_blocks;
 irlock_block _current_frame[IRLOCK_MAX_BLOCKS_PER_FRAME];
+uint32_t _last_angle_update;
+float _last_angle_error;
+uint16_t _irlock_first_update;
 };
 #endif /* __IRLOCK_H__ */
