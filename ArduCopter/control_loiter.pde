@@ -85,7 +85,7 @@ static void loiter_run()
     }else{
     	if (irlock_blob_detected == true)
     	{
-    	    if (current_loc.alt < 100)
+    	    if (current_loc.alt < 300)
     	    {
     	        if (irlock.num_blocks() == 2)
     	        {
@@ -102,6 +102,8 @@ static void loiter_run()
                     float irlock_error_lon = irlock.irlock_xy_pos_to_lon(land_data[0],land_data[1]);
                     // set target to current position
                     wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+                    // call attitude controller
+                    attitude_control.angle_ef_roll_pitch_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), land_data[2]*1000.0f, 1);
     	        }
     	        else
     	        {
@@ -111,6 +113,8 @@ static void loiter_run()
                     float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
                     // set target to current position
                     wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+                    // call attitude controller
+                    attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
     	        }
     	    }
     	    else
@@ -121,22 +125,17 @@ static void loiter_run()
     	        float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
     	        // set target to current position
     	        wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    	        // call attitude controller
+    	        attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
     	    }
     	}
     	else
     	{
     	// run loiter controller
     	wp_nav.update_loiter();
-    	}
 
-    	if (current_loc.alt < 100)
-    	{
-            attitude_control.angle_ef_roll_pitch_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), land_data[2]*1000.0f, 1);
-    	}
-    	else
-    	{
-            // call attitude controller
-            attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
+        // call attitude controller
+        attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
     	}
 
         // body-frame rate controller is run directly from 100hz loop

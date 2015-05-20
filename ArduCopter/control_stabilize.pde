@@ -52,25 +52,25 @@ static void stabilize_run()
     // output pilot's throttle
     attitude_control.set_throttle_out(pilot_throttle_scaled, true);
 
-    //Vector3f land_data(0.0f, 0.0f, 0.0f);
-    //int32_t ir_alt = 100;
-    //if (irlock_blob_detected == true)
-    //{
-        //if (irlock.num_blocks() == 2)
-        //{
-            //int16_t xone = IRLOCK_FRAME[0].center_x;
-            //int16_t xtwo = IRLOCK_FRAME[1].center_x;
-            //int16_t yone = IRLOCK_FRAME[0].center_y;
-            //int16_t ytwo = IRLOCK_FRAME[1].center_y;
-            //int16_t height_one = IRLOCK_FRAME[0].height;
-            //int16_t height_two = IRLOCK_FRAME[1].height;
-            //int16_t width_one = IRLOCK_FRAME[0].width;
-            //int16_t width_two = IRLOCK_FRAME[1].width;
-            //land_data = irlock.irlock_two_target_control(xone,yone,height_one,width_one,xtwo,ytwo,height_two,width_two,ir_alt);
-            //cliSerial->printf_P(PSTR(" x: %i  y: %i  angle: %i \n"),(int16_t)land_data[0],(int16_t)land_data[1],(int16_t)land_data[2]);
-        //}
-        //else
-        //{
-        //}
-    //}
+    Vector3f land_data(0.0f, 0.0f, 0.0f);
+    int32_t ir_alt = 100;
+    if (irlock_blob_detected == true)
+    {
+        if (irlock.num_blocks() == 2)
+        {
+            int16_t xone = IRLOCK_FRAME[0].center_x;
+            int16_t xtwo = IRLOCK_FRAME[1].center_x;
+            int16_t yone = IRLOCK_FRAME[0].center_y;
+            int16_t ytwo = IRLOCK_FRAME[1].center_y;
+            int16_t height_one = IRLOCK_FRAME[0].height;
+            int16_t height_two = IRLOCK_FRAME[1].height;
+            int16_t width_one = IRLOCK_FRAME[0].width;
+            int16_t width_two = IRLOCK_FRAME[1].width;
+            land_data = irlock.irlock_two_target_control(xone,yone,height_one,width_one,xtwo,ytwo,height_two,width_two,ir_alt);
+            cliSerial->printf_P(PSTR(" x: %i  y: %i  angle: %i \n"),(int16_t)land_data[0],(int16_t)land_data[1],(int16_t)land_data[2]);
+        }
+        else
+        {
+        }
+    }
 }
