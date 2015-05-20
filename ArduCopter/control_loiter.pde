@@ -29,6 +29,7 @@ static bool loiter_init(bool ignore_checks)
 // should be called at 100hz or more
 static void loiter_run()
 {
+    Vector3f land_data(0.0f, 0.0f, 0.0f);
     float target_yaw_rate = 0;
     float target_climb_rate = 0;
 
@@ -84,12 +85,43 @@ static void loiter_run()
     }else{
     	if (irlock_blob_detected == true)
     	{
-    	float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
-    	float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
-    	float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
-    	float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
-    	// set target to current position
-    	wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    	    if (current_loc.alt < 100)
+    	    {
+    	        if (irlock.num_blocks() == 2)
+    	        {
+    	            int16_t xone = IRLOCK_FRAME[0].center_x;
+                    int16_t xtwo = IRLOCK_FRAME[1].center_x;
+                    int16_t yone = IRLOCK_FRAME[0].center_y;
+                    int16_t ytwo = IRLOCK_FRAME[1].center_y;
+                    int16_t height_one = IRLOCK_FRAME[0].height;
+                    int16_t height_two = IRLOCK_FRAME[1].height;
+                    int16_t width_one = IRLOCK_FRAME[0].width;
+                    int16_t width_two = IRLOCK_FRAME[1].width;
+                    land_data = irlock.irlock_two_target_control(xone,yone,height_one,width_one,xtwo,ytwo,height_two,width_two,current_loc.alt);
+                    float irlock_error_lat = irlock.irlock_xy_pos_to_lat(land_data[0],land_data[1]);
+                    float irlock_error_lon = irlock.irlock_xy_pos_to_lon(land_data[0],land_data[1]);
+                    // set target to current position
+                    wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    	        }
+    	        else
+    	        {
+                    float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt)/1000.0f;
+                    float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt)/1000.0f;
+                    float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+                    float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+                    // set target to current position
+                    wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    	        }
+    	    }
+    	    else
+    	    {
+    	        float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt)/1000.0f;
+    	        float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt)/1000.0f;
+    	        float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
+    	        float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
+    	        // set target to current position
+    	        wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
+    	    }
     	}
     	else
     	{
@@ -97,8 +129,15 @@ static void loiter_run()
     	wp_nav.update_loiter();
     	}
 
-        // call attitude controller
-        attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
+    	if (current_loc.alt < 100)
+    	{
+            attitude_control.angle_ef_roll_pitch_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), land_data[2]*1000.0f, 1);
+    	}
+    	else
+    	{
+            // call attitude controller
+            attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
+    	}
 
         // body-frame rate controller is run directly from 100hz loop
 

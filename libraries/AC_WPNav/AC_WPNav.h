@@ -44,7 +44,7 @@
 
 #define WPNAV_YAW_DIST_MIN                 200      // minimum track length which will lead to target yaw being updated to point at next waypoint.  Under this distance the yaw target will be frozen at the current heading
 
-#define IRLOCK_LOITER_UPDATE_TIME 		0.0f 		// the wait time for irlock_loiter to update a new marker position
+#define IRLOCK_LOITER_UPDATE_TIME 		0.1f 		// the wait time for irlock_loiter to update a new marker position
 
 class AC_WPNav
 {

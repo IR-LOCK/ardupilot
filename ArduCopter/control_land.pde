@@ -96,8 +96,8 @@ static void land_gps_run()
 
    if (irlock_blob_detected == true)
    {
-   float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
-   float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
+   float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt)/1000.0f;
+   float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt)/1000.0f;
    float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
    float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
    // set target to current position
