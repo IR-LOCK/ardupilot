@@ -25,8 +25,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 #define IRLOCK_NOBLOB_FRAME 10 // the number of consecutive similar frames that will cause the sensor validity variable to turn false
 #define IRLOCK_X_PIXEL_PER_DEGREE 5.374f // the x pixel to angle calibration variable
 #define IRLOCK_Y_PIXEL_PER_DEGREE 5.698f // the y pixel to angle calibration variable
-#define IRLOCK_ANGLE_AVERAGE 15
-#define IRLOCK_MAX_ANGLE_ERROR 90.0f
+#define IRLOCK_ANGLE_WEIGHT 500
+#define IRLOCK_INITIAL_AVERAGE_COUNT 20
 struct _irlock_block {
 uint16_t signature;
 uint16_t center_x;
@@ -79,8 +79,9 @@ AP_Int8 _enabled;
 uint32_t _last_update;
 size_t _num_blocks;
 irlock_block _current_frame[IRLOCK_MAX_BLOCKS_PER_FRAME];
-float _angle_matrix [IRLOCK_ANGLE_AVERAGE];
 int _angle_count;
 float _angle_average;
+float _angle_error_average;
+float _angle_sum;
 };
 #endif /* __IRLOCK_H__ */

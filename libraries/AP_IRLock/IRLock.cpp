@@ -144,13 +144,11 @@ else
     if (_angle_count == 0)
     {
         target_angle = (float) _ahrs.yaw_sensor/100.0f;
-        //return Vector3f(target_x_pos,target_y_pos,target_angle);
-        return Vector3f(target_angle,_ahrs.yaw_sensor/100.0f,_angle_average);
+        return Vector3f(target_x_pos,target_y_pos,target_angle);
     }
     else
     {
-        //return Vector3f(target_x_pos,target_y_pos,_angle_average);
-        return Vector3f(target_angle,_ahrs.yaw_sensor/100.0f,_angle_average);
+        return Vector3f(target_x_pos,target_y_pos,_angle_average);
     }
 }
 
@@ -205,66 +203,39 @@ else
     if (_angle_count == 0)
     {
         target_angle = (float) _ahrs.yaw_sensor/100.0f;
-        //return Vector3f(target_x_pos,target_y_pos,target_angle);
-        return Vector3f(target_angle,_ahrs.yaw_sensor/100.0f,_angle_average);
+        return Vector3f(target_x_pos,target_y_pos,target_angle);
     }
     else
     {
-        //return Vector3f(target_x_pos,target_y_pos,_angle_average);
-        return Vector3f(target_angle,_ahrs.yaw_sensor/100.0f,_angle_average);
+        return Vector3f(target_x_pos,target_y_pos,_angle_average);
     }
 
+}
+
+if (_angle_count < IRLOCK_INITIAL_AVERAGE_COUNT)
+{
+    _angle_sum = _angle_sum + angle_error;
+    _angle_error_average = angle_sum/(_angle_count + 1);
+    _angle_count = _angle_count + 1;
+}
+else
+{
+    _angle_error_average -= _angle_error_average/IRLOCK_ANGLE_WEIGHT;
+    _angle_error_average += angle_error/IRLOCK_ANGLE_WEIGHT;
 }
 
 target_x_pos = (target1_x_pos + target2_x_pos)/2.0f;
 target_y_pos = (target1_y_pos + target2_y_pos)/2.0f;
-target_angle = angle_error + (float) _ahrs.yaw_sensor/100.0f;
-if (target_angle > 360.0f)
+_angle_average = angle_error + (float) _ahrs.yaw_sensor/100.0f;
+
+if (_angle_average > 360.0f)
 {
-    target_angle = target_angle - 360.0f;
+    _angle_average = _angle_average - 360.0f;
 }
-else if (target_angle < 0.0f)
+else if (_angle_average < 0.0f)
 {
-    target_angle = target_angle + 360.0f;
+    _angle_average = _angle_average + 360.0f;
+}
+    return Vector3f(target_x_pos,target_y_pos,_angle_average);
 }
 
-if (_angle_count < IRLOCK_ANGLE_AVERAGE)
-{
-    _angle_matrix[_angle_count] = target_angle;
-    for (int t = 0; t < _angle_count + 1; t = t + 1)
-    {
-        angle_sum = angle_sum + _angle_matrix[t];
-    }
-    _angle_average = angle_sum/(_angle_count + 1);
-    _angle_count = _angle_count + 1;
-    //return Vector3f(target_x_pos,target_y_pos,_angle_average);
-    return Vector3f(1,_ahrs.yaw_sensor/100.0f,_angle_average);
-}
-else
-{
-    if (fabs(_angle_average-target_angle) > IRLOCK_MAX_ANGLE_ERROR)
-    {
-        target_angle = (float) _ahrs.yaw_sensor/100.0f;
-        //return Vector3f(target_x_pos,target_y_pos,_angle_average);
-        return Vector3f(2,_ahrs.yaw_sensor/100.0f,_angle_average);
-    }
-    else
-    {
-        for (int a = 1; a < IRLOCK_ANGLE_AVERAGE - 1; a = a + 1)
-        {
-            _angle_matrix[a-1] = _angle_matrix[a];
-        }
-        _angle_matrix [IRLOCK_ANGLE_AVERAGE - 1] = target_angle;
-
-        for (int p = 0; p < IRLOCK_ANGLE_AVERAGE; p = p + 1)
-        {
-            angle_sum = angle_sum + _angle_matrix[p];
-        }
-        _angle_average = angle_sum/IRLOCK_ANGLE_AVERAGE;
-        //return Vector3f(target_x_pos,target_y_pos,_angle_average);
-        return Vector3f(3,_ahrs.yaw_sensor/100.0f,_angle_average);
-
-    }
-
-}
-}
