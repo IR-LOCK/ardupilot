@@ -236,6 +236,8 @@ else if (_angle_average < 0.0f)
 {
     _angle_average = _angle_average + 360.0f;
 }
-    return Vector3f(target_x_pos,target_y_pos,_angle_average);
+    //return Vector3f(target_x_pos,target_y_pos,_angle_average);
+    return Vector3f(target_x_pos,target_y_pos,theta_one);
+
 }
 
