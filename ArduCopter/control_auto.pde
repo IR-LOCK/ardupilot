@@ -171,20 +171,7 @@ static void auto_wp_run()
         }
     }
 
-    if (irlock_blob_detected == true)
-    {
-    float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
-    float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
-    float irlock_error_lat = irlock.irlock_xy_pos_to_lat((float)irlock_x_pos,(float)irlock_y_pos);
-    float irlock_error_lon = irlock.irlock_xy_pos_to_lon((float)irlock_x_pos,(float)irlock_y_pos);
-    // set target to current position
-    wp_nav.update_irlock_loiter(irlock_error_lat, irlock_error_lon);
-    }
-    else
-    {
-        // run waypoint controller
-        wp_nav.update_wpnav();
-    }
+    wp_nav.update_wpnav();
 
     // call z-axis position controller (wpnav should have already updated it's alt target)
     pos_control.update_z_controller();
