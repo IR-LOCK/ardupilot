@@ -1,5 +1,5 @@
 /*
-* IRLock.cpp
+4* IRLock.cpp
 *
 * Created on: Nov 12, 2014
 * Author: MLandes
@@ -67,7 +67,16 @@ else if (ir_alt < 100)
 else
 {
 }
-return irlock_x_pos = ir_alt*tanf(DEG_TO_RAD*((((float)irlock_current_x-(float)IRLOCK_CENTER_X)/IRLOCK_X_PIXEL_PER_DEGREE) - ((float)_ahrs.roll_sensor/100.0f)));
+if(ir_alt < 400 & (float)_ahrs.roll_sensor <= 500.0f)
+{
+    return irlock_x_pos = ir_alt*tanf(DEG_TO_RAD*((((float)irlock_current_x-(float)IRLOCK_CENTER_X)/IRLOCK_X_PIXEL_PER_DEGREE)));
+
+}
+else
+{
+    return irlock_x_pos = ir_alt*tanf(DEG_TO_RAD*((((float)irlock_current_x-(float)IRLOCK_CENTER_X)/IRLOCK_X_PIXEL_PER_DEGREE) - ((float)_ahrs.roll_sensor/100.0f)));
+
+}
 }
 // Converts irlock y pixel values into positive forward body reference frame position in cm.
 int16_t IRLock::irlock_center_y_to_pos(int16_t irlock_current_y, int32_t ir_alt)
@@ -85,7 +94,16 @@ else if (ir_alt < 100)
 else
 {
 }
-return irlock_y_pos = ir_alt*tanf(DEG_TO_RAD*((((float)irlock_current_y-(float)IRLOCK_CENTER_Y)/-IRLOCK_Y_PIXEL_PER_DEGREE) + ((float)_ahrs.pitch_sensor/100.0f)));
+if (ir_alt < 400 & (float)_ahrs.pitch_sensor <= 500.0f)
+{
+    return irlock_y_pos = ir_alt*tanf(DEG_TO_RAD*((((float)irlock_current_y-(float)IRLOCK_CENTER_Y)/-IRLOCK_Y_PIXEL_PER_DEGREE)));
+
+}
+else
+{
+    return irlock_y_pos = ir_alt*tanf(DEG_TO_RAD*((((float)irlock_current_y-(float)IRLOCK_CENTER_Y)/-IRLOCK_Y_PIXEL_PER_DEGREE) + ((float)_ahrs.pitch_sensor/100.0f)));
+
+}
 }
 // Rotates the irlock xy body frame positions to a lattitude position
 float IRLock::irlock_xy_pos_to_lat(int16_t irlock_x_pos, int16_t irlock_y_pos)
