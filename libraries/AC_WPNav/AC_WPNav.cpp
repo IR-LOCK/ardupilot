@@ -334,21 +334,34 @@ dt = 0.0;
 }
 // update the irlock_loiter target position after IRLOCK_LOITER_UPDATE_TIME has passed
 float irlock_dt = (now - _irlock_last_update) / 1000.0f;
-if (irlock_dt >= IRLOCK_LOITER_UPDATE_TIME)
+if (irlock_dt >= IRLOCK_LOITER_UPDATE_TIME + 0.1)
 {
-// take average of the irlock marker positions
-float irlock_pos_avg_x = _irlock_pos_sum_x/_irlock_iter;
-float irlock_pos_avg_y = _irlock_pos_sum_y/_irlock_iter;
-// reset irlock marker position sum variables and iteration variables back to zero
-_irlock_pos_sum_x = 0;
-_irlock_pos_sum_y = 0;
-_irlock_iter = 0;
-// set target position
-_pos_control.set_xy_target(irlock_pos_avg_x, irlock_pos_avg_y);
-// disable feed forward variables for irlock_loiter position update
-_pos_control.freeze_ff_xy();
-//capture time since last iteration
-_irlock_last_update = now;
+    float irlock_pos_avg_x = curr_pos.x + irlock_error_lat;
+    float irlock_pos_avg_y = curr_pos.y + irlock_error_lon;
+    _irlock_iter = 0;
+    _irlock_pos_sum_x = 0;
+    _irlock_pos_sum_y = 0;
+    _pos_control.set_xy_target(irlock_pos_avg_x, irlock_pos_avg_y);
+    // disable feed forward variables for irlock_loiter position update
+    _pos_control.freeze_ff_xy();
+    //capture time since last iteration
+    _irlock_last_update = now;
+}
+else if (irlock_dt >= IRLOCK_LOITER_UPDATE_TIME)
+{
+    // take average of the irlock marker positions
+    float irlock_pos_avg_x = _irlock_pos_sum_x/_irlock_iter;
+    float irlock_pos_avg_y = _irlock_pos_sum_y/_irlock_iter;
+    // reset irlock marker position sum variables and iteration variables back to zero
+    _irlock_pos_sum_x = 0;
+    _irlock_pos_sum_y = 0;
+    _irlock_iter = 0;
+    // set target position
+    _pos_control.set_xy_target(irlock_pos_avg_x, irlock_pos_avg_y);
+    // disable feed forward variables for irlock_loiter position update
+    _pos_control.freeze_ff_xy();
+    //capture time since last iteration
+    _irlock_last_update = now;
 }
 // capture time since last iteration
 _loiter_last_update = now;
