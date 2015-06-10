@@ -4,6 +4,12 @@ static bool land_with_gps;
 
 static uint32_t land_start_time;
 static bool land_pause;
+static bool irlock_pause;
+static bool pause_init;
+static int after_pause_step;
+static int height_count;
+static uint32_t pause_start_time;
+
 
 // land_init - initialise land controller
 static bool land_init(bool ignore_checks)
@@ -27,6 +33,10 @@ static bool land_init(bool ignore_checks)
     land_start_time = millis();
 
     land_pause = false;
+    irlock_pause = true;
+    pause_init = false;
+    after_pause_step = 0;
+    height_count = 0;
 
     return true;
 }
@@ -66,6 +76,10 @@ static void land_gps_run()
         // disarm when the landing detector says we've landed
         if (ap.land_complete) {
             init_disarm_motors();
+            irlock_pause = false;
+            pause_init = false;
+            pause_start_time = 0;
+            after_pause_step = 0;
         }
 #endif
         return;
@@ -94,7 +108,54 @@ static void land_gps_run()
     // process roll, pitch inputs
     wp_nav.set_pilot_desired_acceleration(roll_control, pitch_control);
 
-   if (irlock_blob_detected == true)
+    float cmb_rate;
+    //pause 4 seconds before beginning land descent
+    if(land_pause && millis()-land_start_time < 4000) {
+        cmb_rate = 0;
+    } else {
+        land_pause = false;
+        cmb_rate = get_throttle_land();
+    }
+
+    //pause at 2 meter altitude to center over target
+    if (irlock_pause == true)
+    {
+        if (pause_init == false)
+        {
+            if (current_loc.alt < 200)
+            {
+                height_count = height_count + 1;
+            }
+            else
+            {
+                height_count = 0;
+            }
+        }
+
+        if (height_count > 25)
+        {
+            if (pause_init == false)
+            {
+                pause_init = true;
+                pause_start_time = millis();
+            }
+        }
+
+        if (pause_init == false)
+        {
+        }
+        else if (pause_init == true && millis() - pause_start_time < 6000)
+        {
+            cmb_rate = 0;
+        }
+        else
+        {
+            after_pause_step = 1;
+        }
+    }
+
+
+   if (irlock_blob_detected == true && after_pause_step == 0 )
    {
    float irlock_x_pos = (float) irlock.irlock_center_x_to_pos(IRLOCK_FRAME[0].center_x, current_loc.alt);
    float irlock_y_pos = (float) irlock.irlock_center_y_to_pos(IRLOCK_FRAME[0].center_y, current_loc.alt);
@@ -105,21 +166,21 @@ static void land_gps_run()
    }
    else
    {
-   // run loiter controller
-   wp_nav.update_loiter();
+       if (after_pause_step == 1)
+       {
+           after_pause_step = 2;
+           wp_nav.update_irlock_loiter(0.0f, 0.0f);
+       }
+       else if(after_pause_step == 2 || after_pause_step == 0)
+       {
+           // run loiter controller
+           wp_nav.update_loiter();
+       }
+
    }
 
     // call attitude controller
     attitude_control.angle_ef_roll_pitch_rate_ef_yaw(wp_nav.get_roll(), wp_nav.get_pitch(), target_yaw_rate);
-
-    //pause 4 seconds before beginning land descent
-    float cmb_rate;
-    if(land_pause && millis()-land_start_time < 4000) {
-        cmb_rate = 0;
-    } else {
-        land_pause = false;
-        cmb_rate = get_throttle_land();
-    }
 
     // update altitude target and call position controller
     pos_control.set_alt_target_from_climb_rate(cmb_rate, G_Dt, true);
